@@ -58,4 +58,4 @@ async function searchBook(title) {
 /// https://openlibrary.org/dev/docs/api/search
 // https://openlibrary.org/works/OL27448W.json
 
-searchBook("the lord of the rings");
+searchBook("poop");
