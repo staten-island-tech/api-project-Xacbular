@@ -21,12 +21,12 @@ async function searchBook(title) {
     const response = await fetch(
       `https://openlibrary.org/search.json?title=${title}`
     );
-    console.log(response);
     if (response.status != 200) {
       throw new Error(response);
     } else {
       //converts response into json we can use
       const data = await response.json();
+      console.log(data);
       document.getElementById("api-response").innerText = data.docs[0].title;
     }
   } catch (error) {
@@ -58,4 +58,4 @@ async function searchBook(title) {
 /// https://openlibrary.org/dev/docs/api/search
 // https://openlibrary.org/works/OL27448W.json
 
-searchBook("poop");
+searchBook("aegoiaegoijsegoijsegoijsegoij");
