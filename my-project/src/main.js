@@ -17,7 +17,9 @@ async function searchBook(title) {
       )}&limit=6`
     );
 
-    if (!response.ok) throw new Error("Server error. Please try again.");
+    if (!response.ok) {
+      throw new Error("The server is not responding. Please try again later.");
+    }
 
     const data = await response.json();
 
@@ -32,38 +34,32 @@ async function searchBook(title) {
   }
 }
 
-// 2. Render cards with insertAdjacentHTML
 function renderBooks(bookArray) {
   uiElements.container.innerHTML = "";
 
   bookArray.forEach((book) => {
-    // Simplify: create the ID once here
-    const cleanId = book.key.split("/").pop();
-    const author = book.author_name ? book.author_name[0] : "Unknown Author";
+    const card = document.createElement("div");
+    card.className =
+      "bg-white p-6 rounded-xl shadow-lg border border-amber-100 flex flex-col justify-between";
 
-    const cardHTML = `
-      <div class="bg-white p-6 rounded-xl shadow-lg border border-amber-100 flex flex-col justify-between">
-        <div>
-          <h3 class="font-bold text-xl text-amber-900">${book.title}</h3>
-          <p class="text-gray-600 italic">By ${author}</p>
-          <div id="desc-${cleanId}" class="mt-4 text-sm text-gray-700"></div>
-        </div>
-        <button 
-          onclick="fetchDescription('${book.key}', '${cleanId}')"
-          class="mt-6 bg-amber-100 text-amber-900 font-semibold py-2 px-4 rounded hover:bg-amber-200"
-        >
-          View Description
-        </button>
+    const bookId = book.key.split("/").pop();
+
+    card.innerHTML = `
+      <div>
+        <h3 class="font-bold text-xl text-amber-900">${book.title}</h3>
+        <p class="text-gray-600 italic">By ${
+          book.author_name ? book.author_name[0] : "Unknown Author"
+        }</p>
+        <div id="desc-${bookId}" class="mt-4 text-sm text-gray-700"></div>
       </div>
     `;
     uiElements.container.insertAdjacentHTML("beforeend", cardHTML);
   });
 }
 
-// 3. Fetching the specific description (The Second API Call)
-window.fetchDescription = async function (workKey, cleanId) {
-  const descBox = document.getElementById(`desc-${cleanId}`);
-  descBox.innerText = "Loading...";
+window.fetchDescription = async function (workKey, bookId) {
+  const descBox = document.getElementById(`desc-${bookId}`);
+  descBox.innerText = "Loading description...";
 
   try {
     const response = await fetch(`https://openlibrary.org${workKey}.json`);
@@ -73,16 +69,26 @@ window.fetchDescription = async function (workKey, cleanId) {
     let rawDesc = details.description || "No description available.";
     let finalDesc = typeof rawDesc === "object" ? rawDesc.value : rawDesc;
 
-    descBox.innerText = finalDesc.slice(0, 200) + "...";
+    if (details.description) {
+      description =
+        typeof details.description === "string"
+          ? details.description
+          : details.description.value;
+    }
+
+    descBox.innerText = description.slice(0, 150) + "...";
   } catch (err) {
     descBox.innerText = "Failed to load description.";
   }
 };
 
-// 4. Submit Event
-uiElements.form.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const query = uiElements.input.value.trim();
-  if (query) searchBook(query);
-  else alert("Please enter a title!");
+uiElements.form.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const userQuery = uiElements.input.value.trim();
+
+  if (userQuery === "") {
+    alert("Please enter a book name first!");
+  } else {
+    searchBook(userQuery);
+  }
 });
