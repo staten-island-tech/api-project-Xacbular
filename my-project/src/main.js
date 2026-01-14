@@ -31,6 +31,8 @@ async function searchBook(title) {
     }
   } catch (error) {
     console.error(error);
+    const container = document.getElementById("api-response");
+    container.innerHTML = `<p class="text-red-500">Sorry, something went wrong. Please try again later.</p>`;
   }
 }
 
@@ -58,4 +60,4 @@ async function searchBook(title) {
 /// https://openlibrary.org/dev/docs/api/search
 // https://openlibrary.org/works/OL27448W.json
 
-searchBook("aegoiaegoijsegoijsegoijsegoij");
+searchBook("Lord Of The Rings");
