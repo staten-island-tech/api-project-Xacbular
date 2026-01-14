@@ -4,100 +4,85 @@ const uiElements = {
   container: document.getElementById("results-container"),
 };
 
+// 1. Search for books
 async function searchBook(title) {
   try {
     uiElements.container.innerHTML =
-      "<p class='text-center col-span-full'>Searching for books...</p>";
+      "<p class='text-center col-span-full'>Searching...</p>";
 
+    // We use encodeURIComponent to handle titles with spaces or special characters safely
     const response = await fetch(
-      `https://openlibrary.org/search.json?title=${title}&limit=6`
+      `https://openlibrary.org/search.json?title=${encodeURIComponent(
+        title
+      )}&limit=6`
     );
 
-    // Promise Handling: Check if the response is okay
-    if (!response.ok) {
-      throw new Error("The server is not responding. Please try again later.");
-    }
+    if (!response.ok) throw new Error("Server error. Please try again.");
 
     const data = await response.json();
 
-    // Logic to handle empty results
     if (data.docs.length === 0) {
       uiElements.container.innerHTML =
-        "<p class='text-center col-span-full'>No books found. Try another title!</p>";
+        "<p class='text-center col-span-full'>No books found!</p>";
     } else {
-      renderBooks(data.docs); // Send the array of books to be displayed
+      renderBooks(data.docs);
     }
   } catch (error) {
-    // Promise Handling: Alerting the user to the specific failure
     uiElements.container.innerHTML = `<p class="text-red-600 text-center col-span-full">${error.message}</p>`;
   }
 }
 
-// Array Methods: Using .forEach to iterate and display data
+// 2. Render cards with insertAdjacentHTML
 function renderBooks(bookArray) {
-  uiElements.container.innerHTML = ""; // Clear previous results
+  uiElements.container.innerHTML = "";
 
   bookArray.forEach((book) => {
-    // We create a "card" for each book
-    const card = document.createElement("div");
-    card.className =
-      "bg-white p-6 rounded-xl shadow-lg border border-amber-100 flex flex-col justify-between";
+    // Simplify: create the ID once here
+    const cleanId = book.key.split("/").pop();
+    const author = book.author_name ? book.author_name[0] : "Unknown Author";
 
-    // We use the 'key' from the API to uniquely identify which book needs a description
-    const bookId = book.key.split("/").pop();
-
-    card.innerHTML = `
-      <div>
-        <h3 class="font-bold text-xl text-amber-900">${book.title}</h3>
-        <p class="text-gray-600 italic">By ${
-          book.author_name ? book.author_name[0] : "Unknown Author"
-        }</p>
-        <div id="desc-${bookId}" class="mt-4 text-sm text-gray-700"></div>
+    const cardHTML = `
+      <div class="bg-white p-6 rounded-xl shadow-lg border border-amber-100 flex flex-col justify-between">
+        <div>
+          <h3 class="font-bold text-xl text-amber-900">${book.title}</h3>
+          <p class="text-gray-600 italic">By ${author}</p>
+          <div id="desc-${cleanId}" class="mt-4 text-sm text-gray-700"></div>
+        </div>
+        <button 
+          onclick="fetchDescription('${book.key}', '${cleanId}')"
+          class="mt-6 bg-amber-100 text-amber-900 font-semibold py-2 px-4 rounded hover:bg-amber-200"
+        >
+          View Description
+        </button>
       </div>
-      <button 
-        onclick="fetchDescription('${book.key}', '${bookId}')"
-        class="mt-6 bg-amber-100 text-amber-900 font-semibold py-2 px-4 rounded hover:bg-amber-200"
-      >
-        View Description
-      </button>
     `;
-    uiElements.container.appendChild(card);
+    uiElements.container.insertAdjacentHTML("beforeend", cardHTML);
   });
 }
 
-// Second API Call: Fetching specific details based on user input (button click)
-window.fetchDescription = async function (workKey, bookId) {
-  const descBox = document.getElementById(`desc-${bookId}`);
-  descBox.innerText = "Loading description...";
+// 3. Fetching the specific description (The Second API Call)
+window.fetchDescription = async function (workKey, cleanId) {
+  const descBox = document.getElementById(`desc-${cleanId}`);
+  descBox.innerText = "Loading...";
 
   try {
     const response = await fetch(`https://openlibrary.org${workKey}.json`);
     const details = await response.json();
 
-    let description = "No description found for this book.";
+    // Simplified: Check if description exists, then check if it's an object or string
+    let rawDesc = details.description || "No description available.";
+    let finalDesc = typeof rawDesc === "object" ? rawDesc.value : rawDesc;
 
-    if (details.description) {
-      // Descriptions can be a string OR an object {value: "..."}
-      description =
-        typeof details.description === "string"
-          ? details.description
-          : details.description.value;
-    }
-
-    descBox.innerText = description.slice(0, 150) + "..."; // Keep it short
+    descBox.innerText = finalDesc.slice(0, 200) + "...";
   } catch (err) {
     descBox.innerText = "Failed to load description.";
   }
 };
 
-// Form Handling: Logic to prevent blank fields
-uiElements.form.addEventListener("submit", (event) => {
-  event.preventDefault(); // Stop the page from refreshing
-  const userQuery = uiElements.input.value.trim();
-
-  if (userQuery === "") {
-    alert("Please enter a book name first!");
-  } else {
-    searchBook(userQuery);
-  }
+// 4. Submit Event
+uiElements.form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const query = uiElements.input.value.trim();
+  if (query) searchBook(query);
+  else alert("Please enter a title!");
 });
