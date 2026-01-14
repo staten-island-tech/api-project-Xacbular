@@ -20,6 +20,26 @@
 
     <h2 id="api-response" class="text-center mt-4 text-xl"></h2>
 
+    <form id="search-form" class="flex flex-col items-center gap-4 mt-8">
+      <input
+        class="border-2 border-amber-900 p-3 rounded-lg w-full max-w-md"
+        type="text"
+        id="book-input"
+        placeholder="Type a book title here..."
+      />
+      <button
+        type="submit"
+        class="bg-amber-800 text-white px-6 py-2 rounded-full hover:bg-amber-900 transition"
+      >
+        Search Books
+      </button>
+    </form>
+
+    <div
+      id="results-container"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12 max-w-6xl mx-auto"
+    ></div>
+
     <script src="/src/main.js"></script>
   </body>
 </html>
