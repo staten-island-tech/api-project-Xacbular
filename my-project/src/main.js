@@ -13,37 +13,31 @@ async function searchBook(title) {
       `https://openlibrary.org/search.json?title=${title}&limit=6`
     );
 
-    // Promise Handling: Check if the response is okay
     if (!response.ok) {
       throw new Error("The server is not responding. Please try again later.");
     }
 
     const data = await response.json();
 
-    // Logic to handle empty results
     if (data.docs.length === 0) {
       uiElements.container.innerHTML =
         "<p class='text-center col-span-full'>No books found. Try another title!</p>";
     } else {
-      renderBooks(data.docs); // Send the array of books to be displayed
+      renderBooks(data.docs);
     }
   } catch (error) {
-    // Promise Handling: Alerting the user to the specific failure
     uiElements.container.innerHTML = `<p class="text-red-600 text-center col-span-full">${error.message}</p>`;
   }
 }
 
-// Array Methods: Using .forEach to iterate and display data
 function renderBooks(bookArray) {
-  uiElements.container.innerHTML = ""; // Clear previous results
+  uiElements.container.innerHTML = "";
 
   bookArray.forEach((book) => {
-    // We create a "card" for each book
     const card = document.createElement("div");
     card.className =
       "bg-white p-6 rounded-xl shadow-lg border border-amber-100 flex flex-col justify-between";
 
-    // We use the 'key' from the API to uniquely identify which book needs a description
     const bookId = book.key.split("/").pop();
 
     card.innerHTML = `
@@ -65,7 +59,6 @@ function renderBooks(bookArray) {
   });
 }
 
-// Second API Call: Fetching specific details based on user input (button click)
 window.fetchDescription = async function (workKey, bookId) {
   const descBox = document.getElementById(`desc-${bookId}`);
   descBox.innerText = "Loading description...";
@@ -77,22 +70,20 @@ window.fetchDescription = async function (workKey, bookId) {
     let description = "No description found for this book.";
 
     if (details.description) {
-      // Descriptions can be a string OR an object {value: "..."}
       description =
         typeof details.description === "string"
           ? details.description
           : details.description.value;
     }
 
-    descBox.innerText = description.slice(0, 150) + "..."; // Keep it short
+    descBox.innerText = description.slice(0, 150) + "...";
   } catch (err) {
     descBox.innerText = "Failed to load description.";
   }
 };
 
-// Form Handling: Logic to prevent blank fields
 uiElements.form.addEventListener("submit", (event) => {
-  event.preventDefault(); // Stop the page from refreshing
+  event.preventDefault();
   const userQuery = uiElements.input.value.trim();
 
   if (userQuery === "") {
